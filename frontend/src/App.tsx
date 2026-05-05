@@ -8,25 +8,26 @@ interface Book {
   isbn: string | null
 }
 
-const PAGE_SIZE = 20
 const CACHE_KEY = 'books-cache'
 
 export default function App() {
   const [books, setBooks] = useState<Book[]>(() => {
-    try { return JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? '[]') } catch { return [] }
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? '[]')
+      return Array.isArray(cached) ? cached : []
+    } catch { return [] }
   })
-  const [offset, setOffset] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/book?offset=${offset}&limit=${PAGE_SIZE}`)
+    fetch('/api/book?limit=1000')
       .then((r) => r.json())
       .then((data: Book[]) => {
-        setBooks(data)
-        setHasMore(data.length === PAGE_SIZE)
-        if (offset === 0) sessionStorage.setItem(CACHE_KEY, JSON.stringify(data))
+        if (Array.isArray(data)) {
+          setBooks(data)
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(data))
+        }
       })
-  }, [offset])
+  }, [])
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-8">
@@ -50,23 +51,6 @@ export default function App() {
             </div>
           </Link>
         ))}
-      </div>
-
-      <div className="flex justify-center gap-3 mt-10">
-        <button
-          onClick={() => setOffset((o) => o - PAGE_SIZE)}
-          disabled={offset === 0}
-          className="px-5 py-2 text-sm border rounded-full bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() => setOffset((o) => o + PAGE_SIZE)}
-          disabled={!hasMore}
-          className="px-5 py-2 text-sm border rounded-full bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Next
-        </button>
       </div>
     </main>
   )
