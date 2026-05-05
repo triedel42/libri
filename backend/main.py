@@ -1,10 +1,17 @@
 from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pathlib import Path
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from backend.auth import (
+    COOKIE_NAME,
+    authorize_url,
+    exchange_code,
+    make_cookie,
+    require_auth,
+)
 from backend.database import Base, engine, get_db
 from backend.models import Book
 from backend.covers import fetch_isbn_metadata, fetch_cover
@@ -41,17 +48,53 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/api/auth/login")
+def login():
+    return RedirectResponse(authorize_url())
+
+
+@app.get("/api/auth/callback")
+async def callback(code: str):
+    user = await exchange_code(code)
+    cookie = make_cookie(user)
+    response = RedirectResponse("/")
+    response.set_cookie(
+        COOKIE_NAME,
+        cookie,
+        httponly=True,
+        samesite="lax",
+        secure=True,
+        max_age=8 * 3600,
+    )
+    return response
+
+
+@app.get("/api/auth/me")
+def me(user: dict = Depends(require_auth)):
+    return user
+
+
+@app.post("/api/auth/logout")
+def logout():
+    response = RedirectResponse("/", status_code=303)
+    response.delete_cookie(COOKIE_NAME)
+    return response
+
+
 @app.get("/api/book", response_model=list[BookResponse])
 def list_books(
     db: Session = Depends(get_db),
     offset: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
+    _: dict = Depends(require_auth),
 ):
     return db.query(Book).order_by(Book.id).offset(offset).limit(limit).all()
 
 
 @app.get("/api/book/{book_id}", response_model=BookResponse)
-def get_book(book_id: int, db: Session = Depends(get_db)):
+def get_book(
+    book_id: int, db: Session = Depends(get_db), _: dict = Depends(require_auth)
+):
     book = db.get(Book, book_id)
     if book is None:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -59,7 +102,9 @@ def get_book(book_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/api/book", response_model=BookResponse, status_code=201)
-async def create_book(body: BookCreate, db: Session = Depends(get_db)):
+async def create_book(
+    body: BookCreate, db: Session = Depends(get_db), _: dict = Depends(require_auth)
+):
     data = await fetch_isbn_metadata(body.isbn)
     if data is None:
         raise HTTPException(status_code=422, detail="ISBN not found")
@@ -71,7 +116,7 @@ async def create_book(body: BookCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/api/isbn/{isbn}", response_model=ISBNLookup)
-async def lookup_isbn(isbn: str):
+async def lookup_isbn(isbn: str, _: dict = Depends(require_auth)):
     data = await fetch_isbn_metadata(isbn)
     if data is None:
         raise HTTPException(status_code=404, detail="ISBN not found")
@@ -79,7 +124,7 @@ async def lookup_isbn(isbn: str):
 
 
 @app.get("/api/cover/{isbn}")
-async def get_cover(isbn: str):
+async def get_cover(isbn: str, _: dict = Depends(require_auth)):
     path = await fetch_cover(isbn)
     if path is None:
         raise HTTPException(status_code=404, detail="Cover not found")
