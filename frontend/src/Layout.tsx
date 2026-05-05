@@ -8,6 +8,19 @@ const bookSvg = (
   </svg>
 )
 
+const barcodeSvg = (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+    <rect x="2"  y="3" width="1" height="18" />
+    <rect x="4"  y="3" width="2" height="18" />
+    <rect x="7"  y="3" width="1" height="18" />
+    <rect x="9"  y="3" width="3" height="18" />
+    <rect x="13" y="3" width="1" height="18" />
+    <rect x="15" y="3" width="2" height="18" />
+    <rect x="18" y="3" width="1" height="18" />
+    <rect x="20" y="3" width="2" height="18" />
+  </svg>
+)
+
 export default function Layout() {
   const { user, loading, logout } = useAuth()
 
@@ -16,13 +29,18 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b py-4">
-        <div className="max-w-5xl mx-auto px-6 flex items-center justify-between">
-          <Link to="/" className="inline-flex items-center gap-2 border-b-2 border-transparent hover:border-current transition-colors">
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-3 items-center">
+          <Link to="/" className="inline-flex items-center gap-2 border-b-2 border-transparent hover:border-current transition-colors justify-self-start">
             {bookSvg}
             <span className="text-2xl font-bold tracking-tight">Libri</span>
           </Link>
           {user && (
-            <button onClick={logout} className="cursor-pointer border-b-2 border-transparent hover:border-current transition-colors">
+            <Link to="/scan" className="justify-self-center p-2 rounded-lg border border-current transition-colors">
+              {barcodeSvg}
+            </Link>
+          )}
+          {user && (
+            <button onClick={logout} className="cursor-pointer border-b-2 border-transparent hover:border-current transition-colors justify-self-end">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />

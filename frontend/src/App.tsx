@@ -17,6 +17,7 @@ export default function App() {
       return Array.isArray(cached) ? cached : []
     } catch { return [] }
   })
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     fetch('/api/book?limit=1000')
@@ -29,17 +30,36 @@ export default function App() {
       })
   }, [])
 
+  const filtered = query
+    ? books.filter((b) =>
+        b.title.toLowerCase().includes(query.toLowerCase()) ||
+        b.author.toLowerCase().includes(query.toLowerCase())
+      )
+    : books
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-8">
+      <div className="flex justify-center mb-8">
+        <div className="flex items-center w-full max-w-md border rounded-full px-4 py-2 bg-white">
+          <input
+            type="text"
+            placeholder="Search by title or author…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 outline-none text-sm bg-transparent"
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        {books.map((book) => (
+        {filtered.map((book) => (
           <Link key={book.id} to={`/book/${book.id}`} state={book} className="flex flex-col gap-2 group">
             <div className="aspect-[2/3] bg-gray-200 rounded overflow-hidden">
               {book.isbn && (
                 <img
                   src={`/api/cover/${book.isbn}`}
                   alt={book.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               )}
             </div>

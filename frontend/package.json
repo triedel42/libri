@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
+    "@zxing/browser": "^0.2.0",
     "react": "^19.2.5",
+    "react-barcode": "^1.6.1",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0",
     "tailwindcss": "^4.2.4"

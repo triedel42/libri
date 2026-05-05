@@ -28,6 +28,8 @@ class BookResponse(BaseModel):
     title: str
     author: str
     isbn: str | None
+    added_by: str | None
+    source_url: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -91,6 +93,16 @@ def list_books(
     return db.query(Book).order_by(Book.id).offset(offset).limit(limit).all()
 
 
+@app.get("/api/book/by-isbn/{isbn}", response_model=BookResponse)
+def get_book_by_isbn(
+    isbn: str, db: Session = Depends(get_db), _: dict = Depends(require_auth)
+):
+    book = db.query(Book).filter(Book.isbn == isbn).first()
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return book
+
+
 @app.get("/api/book/{book_id}", response_model=BookResponse)
 def get_book(
     book_id: int, db: Session = Depends(get_db), _: dict = Depends(require_auth)
@@ -101,14 +113,35 @@ def get_book(
     return book
 
 
+@app.delete("/api/book/{book_id}", status_code=204)
+def delete_book(
+    book_id: int, db: Session = Depends(get_db), user: dict = Depends(require_auth)
+):
+    book = db.get(Book, book_id)
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    if book.added_by != user["login"]:
+        raise HTTPException(
+            status_code=403, detail="Only the user who added this book may remove it"
+        )
+    db.delete(book)
+    db.commit()
+
+
 @app.post("/api/book", response_model=BookResponse, status_code=201)
 async def create_book(
-    body: BookCreate, db: Session = Depends(get_db), _: dict = Depends(require_auth)
+    body: BookCreate, db: Session = Depends(get_db), user: dict = Depends(require_auth)
 ):
     data = await fetch_isbn_metadata(body.isbn)
     if data is None:
         raise HTTPException(status_code=422, detail="ISBN not found")
-    book = Book(title=data["title"], author=data["author"], isbn=body.isbn)
+    book = Book(
+        title=data["title"],
+        author=data["author"],
+        isbn=body.isbn,
+        added_by=user["login"],
+        source_url=data.get("source_url"),
+    )
     db.add(book)
     db.commit()
     db.refresh(book)
