@@ -6,6 +6,7 @@ interface Book {
   title: string
   author: string
   isbn: string | null
+  borrowed_by: string | null
 }
 
 const CACHE_KEY = 'books-cache'
@@ -54,13 +55,18 @@ export default function App() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {filtered.map((book) => (
           <Link key={book.id} to={`/book/${book.id}`} state={book} className="flex flex-col gap-2 group">
-            <div className="aspect-[2/3] bg-gray-200 rounded overflow-hidden">
+            <div className="relative aspect-[2/3] bg-gray-200 rounded overflow-hidden">
               {book.isbn && (
                 <img
                   src={`/api/cover/${book.isbn}`}
                   alt={book.title}
-                  className="w-full h-full object-contain"
+                  className={`w-full h-full object-contain ${book.borrowed_by ? 'opacity-40' : ''}`}
                 />
+              )}
+              {book.borrowed_by && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-xs font-medium text-gray-700 text-center px-2 leading-snug">{book.borrowed_by}</span>
+                </div>
               )}
             </div>
             <div>

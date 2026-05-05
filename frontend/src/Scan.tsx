@@ -72,15 +72,15 @@ export default function Scan() {
   return (
     <div className="flex-1 relative bg-black overflow-hidden border-t border-gray-200">
       <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
         <div className="relative w-4/5 h-24" style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }}>
           <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white" />
           <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white" />
           <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white" />
           <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-white" />
         </div>
+        <p className="text-sm text-white/80">Scan ISBN code</p>
       </div>
-      <p className="absolute bottom-8 inset-x-0 text-center text-sm text-white/80">Scan ISBN code</p>
       <button
         onClick={toggleTorch}
         className={`absolute bottom-6 right-6 p-2 rounded-full transition-colors ${torchSupported ? `cursor-pointer ${torch ? 'bg-yellow-400 text-gray-900' : 'bg-black/50 text-white'}` : 'bg-black/20 text-white/30 cursor-not-allowed'}`}
