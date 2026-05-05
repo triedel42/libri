@@ -6,6 +6,9 @@ services:
     ports:
       - "8000:8000"
       - "5173:5173"
+    volumes:
+      - ./data:/app/data
+      - covers:/app/covers
     develop:
       watch:
         - action: sync
@@ -14,7 +17,13 @@ services:
         - action: sync
           path: ./frontend/src
           target: /app/frontend/src
+        - action: sync
+          path: ./frontend/vite.config.ts
+          target: /app/frontend/vite.config.ts
         - action: rebuild
           path: pyproject.toml
         - action: rebuild
           path: frontend/package.json
+
+volumes:
+  covers:
