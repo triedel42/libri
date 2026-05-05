@@ -83,7 +83,11 @@ async def get_cover(isbn: str):
     path = await fetch_cover(isbn)
     if path is None:
         raise HTTPException(status_code=404, detail="Cover not found")
-    return FileResponse(path, media_type="image/jpeg")
+    return FileResponse(
+        path,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 if DIST.exists():

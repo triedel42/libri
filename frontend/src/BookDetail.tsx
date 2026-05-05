@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 
 interface Book {
   id: number
@@ -11,7 +11,8 @@ interface Book {
 
 export default function BookDetail() {
   const { id } = useParams()
-  const [book, setBook] = useState<Book | null>(null)
+  const { state } = useLocation()
+  const [book, setBook] = useState<Book | null>(state ?? null)
 
   useEffect(() => {
     fetch(`/api/book/${id}`)
@@ -22,12 +23,10 @@ export default function BookDetail() {
   if (!book) return null
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-10 flex gap-10">
-      <div className="w-48 shrink-0">
-        {book.isbn ? (
-          <img src={`/api/cover/${book.isbn}`} alt={book.title} className="w-full rounded shadow" />
-        ) : (
-          <div className="w-full aspect-[2/3] bg-gray-200 rounded" />
+    <main className="max-w-3xl mx-auto px-6 py-10 flex flex-col sm:flex-row gap-8">
+      <div className="w-36 sm:w-48 shrink-0 aspect-[2/3] bg-gray-100 rounded overflow-hidden">
+        {book.isbn && (
+          <img src={`/api/cover/${book.isbn}`} alt={book.title} className="w-full h-full object-cover" />
         )}
       </div>
 

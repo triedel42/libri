@@ -6,6 +6,9 @@ services:
     ports:
       - "8000:8000"
       - "5173:5173"
+    env_file:
+      - path: .env
+        required: false
     volumes:
       - ./data:/app/data
       - covers:/app/covers

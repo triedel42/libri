@@ -8,5 +8,6 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:8000',
     },
+    allowedHosts: process.env.HOST ? [process.env.HOST] : [],
   },
 })

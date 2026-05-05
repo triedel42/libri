@@ -9,9 +9,12 @@ interface Book {
 }
 
 const PAGE_SIZE = 20
+const CACHE_KEY = 'books-cache'
 
 export default function App() {
-  const [books, setBooks] = useState<Book[]>([])
+  const [books, setBooks] = useState<Book[]>(() => {
+    try { return JSON.parse(sessionStorage.getItem(CACHE_KEY) ?? '[]') } catch { return [] }
+  })
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(true)
 
@@ -21,6 +24,7 @@ export default function App() {
       .then((data: Book[]) => {
         setBooks(data)
         setHasMore(data.length === PAGE_SIZE)
+        if (offset === 0) sessionStorage.setItem(CACHE_KEY, JSON.stringify(data))
       })
   }, [offset])
 
@@ -28,7 +32,7 @@ export default function App() {
     <main className="max-w-5xl mx-auto px-6 py-8">
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {books.map((book) => (
-          <Link key={book.id} to={`/book/${book.id}`} className="flex flex-col gap-2 group">
+          <Link key={book.id} to={`/book/${book.id}`} state={book} className="flex flex-col gap-2 group">
             <div className="aspect-[2/3] bg-gray-200 rounded overflow-hidden">
               {book.isbn && (
                 <img
