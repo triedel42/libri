@@ -10,8 +10,7 @@ services:
       - path: .env
         required: false
     volumes:
-      - ./data:/app/data
-      - covers:/app/covers
+      - data:/app/data
     develop:
       watch:
         - action: sync
@@ -29,4 +28,4 @@ services:
           path: frontend/package.json
 
 volumes:
-  covers:
+  data:
