@@ -28,13 +28,13 @@ export default function ISBNDetail() {
       .finally(() => setLoading(false))
   }, [isbn])
 
-  async function handleAdd() {
+  async function handleAdd(asOwner = false) {
     setAdding(true)
     setAddError(false)
     const r = await fetch('/api/book', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isbn }),
+      body: JSON.stringify({ isbn, as_owner: asOwner }),
     })
     if (r.ok) {
       navigate('/scan')
@@ -84,21 +84,27 @@ export default function ISBNDetail() {
         <p className="text-sm text-red-500 mb-4">Could not add book — ISBN not found in catalog</p>
       )}
 
-      <div className="flex flex-col items-center gap-3">
-        {!notInCatalog && (
-          <button
-            onClick={handleAdd}
-            disabled={adding || !meta}
-            className="px-6 py-2 bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded-full cursor-pointer"
-          >
-            {adding ? 'Adding…' : 'Add'}
-          </button>
-        )}
+      <button
+        onClick={() => handleAdd(false)}
+        disabled={adding || loading}
+        className="px-10 py-3 bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white text-base font-semibold rounded-full cursor-pointer mb-8 w-full"
+      >
+        {adding ? 'Adding…' : 'Add'}
+      </button>
+
+      <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center gap-3 px-6 pb-8 pt-4 bg-white max-w-lg mx-auto">
+        <button
+          onClick={() => handleAdd(true)}
+          disabled={adding || loading}
+          className="px-6 py-2 bg-gray-900 hover:bg-gray-700 disabled:opacity-50 text-white text-sm font-medium rounded-full cursor-pointer w-full"
+        >
+          {adding ? 'Adding…' : 'Add as my own book'}
+        </button>
         <button
           onClick={() => navigate('/scan')}
-          className="px-6 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-full cursor-pointer"
+          className="px-6 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-full cursor-pointer w-full"
         >
-          Abort
+          Cancel
         </button>
       </div>
     </main>

@@ -61,6 +61,7 @@ class BookEventResponse(BaseModel):
 
 class BookCreate(BaseModel):
     isbn: str
+    as_owner: bool = False
 
 
 class CommentCreate(BaseModel):
@@ -252,14 +253,13 @@ def add_comment(
 async def create_book(
     body: BookCreate, db: Session = Depends(get_db), user: dict = Depends(require_auth)
 ):
-    data = await fetch_isbn_metadata(body.isbn)
-    if data is None:
-        raise HTTPException(status_code=422, detail="ISBN not found")
+    data = await fetch_isbn_metadata(body.isbn) or {}
     book = Book(
-        title=data["title"],
-        author=data["author"],
+        title=data.get("title") or body.isbn,
+        author=data.get("author", ""),
         isbn=body.isbn,
         added_by=user["login"],
+        owner=user["login"] if body.as_owner else None,
         source_url=data.get("source_url"),
         published_year=data.get("published_year"),
     )
@@ -289,6 +289,27 @@ async def get_cover(isbn: str, _: dict = Depends(require_auth)):
         media_type="image/jpeg",
         headers={"Cache-Control": "public, max-age=31536000, immutable"},
     )
+
+
+@app.post("/api/book/{book_id}/update", response_model=BookResponse)
+async def update_book_metadata(
+    book_id: int, db: Session = Depends(get_db), _: dict = Depends(require_auth)
+):
+    book = db.get(Book, book_id)
+    if book is None:
+        raise HTTPException(status_code=404, detail="Book not found")
+    if not book.isbn:
+        raise HTTPException(status_code=422, detail="Book has no ISBN")
+    data = await fetch_isbn_metadata(book.isbn, force=True)
+    if data is not None:
+        book.title = data["title"]
+        book.author = data["author"]
+        book.source_url = data.get("source_url")
+        book.published_year = data.get("published_year")
+        db.commit()
+        db.refresh(book)
+    await fetch_cover(book.isbn)
+    return book
 
 
 if DIST.exists():

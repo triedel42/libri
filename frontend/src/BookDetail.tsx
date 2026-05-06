@@ -39,6 +39,7 @@ export default function BookDetail() {
   const { user } = useAuth()
   const [book, setBook] = useState<Book | null>(state ?? null)
   const [comment, setComment] = useState('')
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     fetch(`/api/book/${id}`).then((r) => r.json()).then(setBook)
@@ -68,6 +69,13 @@ export default function BookDetail() {
       body: JSON.stringify({ note: comment.trim() }),
     })
     if (r.ok) { setComment(''); refreshBook() }
+  }
+
+  async function handleUpdate() {
+    setUpdating(true)
+    const r = await fetch(`/api/book/${id}/update`, { method: 'POST' })
+    if (r.ok) setBook(await r.json())
+    setUpdating(false)
   }
 
   async function handleDelete() {
@@ -109,6 +117,14 @@ export default function BookDetail() {
               </tr>
             )}
             <tr className="border-b">
+              <td className="py-2 pr-4 text-gray-500 w-24">Owner</td>
+              <td className="py-2 font-medium">
+                {book.owner
+                  ? <a href={`https://profile.intra.42.fr/users/${book.owner}`} target="_blank" rel="noreferrer" className="underline hover:text-gray-500">{book.owner}</a>
+                  : 'Library'}
+              </td>
+            </tr>
+            <tr className="border-b">
               <td className="py-2 pr-4 text-gray-500 w-24">ISBN</td>
               <td className="py-2 font-medium">
                 {book.isbn ? (
@@ -123,7 +139,7 @@ export default function BookDetail() {
               <td className="py-2 pr-4 text-gray-500 w-24">Links</td>
               <td className="py-2 font-medium">
                 <a href={`https://www.goodreads.com/search?q=${book.isbn}`} target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 hover:underline">
+                  className="inline-flex items-center gap-1.5 underline hover:text-gray-600">
                   <img src="https://www.google.com/s2/favicons?domain=goodreads.com&sz=32" alt="" className="w-4 h-4" />
                   Goodreads
                 </a>
@@ -155,9 +171,20 @@ export default function BookDetail() {
             <span className="text-sm text-gray-500">Borrowed by <a href={`https://profile.intra.42.fr/users/${book.borrowed_by}`} target="_blank" rel="noreferrer" className="underline hover:text-gray-700">{book.borrowed_by}</a></span>
           )}
           {user?.login === book.added_by && !book.removed && (
-            <button onClick={handleDelete} className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-full cursor-pointer">
-              Remove
-            </button>
+            <>
+              <button onClick={handleUpdate} disabled={updating} className="px-6 py-2 bg-gray-900 hover:bg-gray-700 disabled:opacity-70 text-white text-sm font-medium rounded-full cursor-pointer inline-flex items-center gap-2">
+                {updating && (
+                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  </svg>
+                )}
+                Update
+              </button>
+              <button onClick={handleDelete} className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-full cursor-pointer">
+                Remove
+              </button>
+            </>
           )}
           {user?.login === book.added_by && book.removed && (
             <button onClick={handleRestore} className="px-6 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium rounded-full cursor-pointer">

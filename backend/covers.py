@@ -16,6 +16,7 @@ _DNB_SRU = "https://services.dnb.de/sru/dnb"
 _DC = "http://purl.org/dc/elements/1.1/"
 
 _CLIENT = httpx.AsyncClient(timeout=30.0)
+_metadata_cache: dict[str, dict] = {}
 
 
 def _extract_year(date_str: str | None) -> int | None:
@@ -25,7 +26,16 @@ def _extract_year(date_str: str | None) -> int | None:
     return int(m.group(1)) if m else None
 
 
-async def fetch_isbn_metadata(isbn: str) -> dict | None:
+async def fetch_isbn_metadata(isbn: str, force: bool = False) -> dict | None:
+    if not force and isbn in _metadata_cache:
+        return _metadata_cache[isbn]
+    result = await _fetch_from_providers(isbn)
+    if result is not None:
+        _metadata_cache[isbn] = result
+    return result
+
+
+async def _fetch_from_providers(isbn: str) -> dict | None:
     try:
         r = await _CLIENT.get(
             _OL_BOOKS,
