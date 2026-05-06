@@ -13,11 +13,12 @@ from backend.auth import (
     make_cookie,
     require_auth,
 )
-from backend.database import Base, engine, get_db
+from backend.database import Base, engine, get_db, run_migrations
 from backend.models import Book, BookEvent
 from backend.covers import fetch_isbn_metadata, fetch_cover
 
 Base.metadata.create_all(bind=engine)
+run_migrations()
 
 app = FastAPI()
 
@@ -34,6 +35,7 @@ class BookResponse(BaseModel):
     borrowed_by: str | None
     removed: bool
     source_url: str | None
+    published_year: int | None
     events: list["BookEventResponse"] = []
 
     model_config = {"from_attributes": True}
@@ -116,10 +118,12 @@ def list_books(
     limit: int = Query(20, ge=1, le=1000),
     _: dict = Depends(require_auth),
 ):
+    from sqlalchemy import nulls_last, desc
+
     return (
         db.query(Book)
         .filter(~Book.removed)
-        .order_by(Book.id)
+        .order_by(nulls_last(desc(Book.published_year)))
         .offset(offset)
         .limit(limit)
         .all()
@@ -257,6 +261,7 @@ async def create_book(
         isbn=body.isbn,
         added_by=user["login"],
         source_url=data.get("source_url"),
+        published_year=data.get("published_year"),
     )
     db.add(book)
     db.flush()

@@ -20,6 +20,7 @@ interface Book {
   borrowed_by: string | null
   removed: boolean
   source_url: string | null
+  published_year: number | null
   events: BookEvent[]
 }
 
@@ -101,6 +102,12 @@ export default function BookDetail() {
               <td className="py-2 pr-4 text-gray-500 w-24">Author</td>
               <td className="py-2 font-medium">{book.author}</td>
             </tr>
+            {book.published_year && (
+              <tr className="border-b">
+                <td className="py-2 pr-4 text-gray-500 w-24">Published</td>
+                <td className="py-2 font-medium">{book.published_year}</td>
+              </tr>
+            )}
             <tr className="border-b">
               <td className="py-2 pr-4 text-gray-500 w-24">ISBN</td>
               <td className="py-2 font-medium">

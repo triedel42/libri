@@ -10,11 +10,12 @@ class Book(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String, nullable=False)
     author: Mapped[str] = mapped_column(String, nullable=True)
-    isbn: Mapped[str | None] = mapped_column(String, nullable=True)
+    isbn: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
     added_by: Mapped[str | None] = mapped_column(String, nullable=True)
     owner: Mapped[str | None] = mapped_column(String, nullable=True)
     borrowed_by: Mapped[str | None] = mapped_column(String, nullable=True)
     source_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    published_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )

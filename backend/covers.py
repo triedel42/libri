@@ -1,12 +1,13 @@
 import logging
 import os
+import re
 import xml.etree.ElementTree as ET
 import httpx
 from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-COVERS_DIR = Path(os.getenv("COVERS_DIR", "/app/covers"))
+COVERS_DIR = Path(os.getenv("COVERS_DIR", "/app/data/covers"))
 
 _OL_BOOKS = "https://openlibrary.org/api/books"
 _OL_COVERS = "https://covers.openlibrary.org/b/isbn"
@@ -15,6 +16,13 @@ _DNB_SRU = "https://services.dnb.de/sru/dnb"
 _DC = "http://purl.org/dc/elements/1.1/"
 
 _CLIENT = httpx.AsyncClient(timeout=30.0)
+
+
+def _extract_year(date_str: str | None) -> int | None:
+    if not date_str:
+        return None
+    m = re.search(r"\b(1[0-9]{3}|20[0-9]{2})\b", date_str)
+    return int(m.group(1)) if m else None
 
 
 async def fetch_isbn_metadata(isbn: str) -> dict | None:
@@ -32,6 +40,7 @@ async def fetch_isbn_metadata(isbn: str) -> dict | None:
                 "isbn": isbn,
                 "title": entry.get("title", ""),
                 "author": authors,
+                "published_year": _extract_year(entry.get("publish_date")),
                 "source_url": f"https://openlibrary.org/isbn/{isbn}",
             }
     except Exception as e:
@@ -51,6 +60,7 @@ async def fetch_isbn_metadata(isbn: str) -> dict | None:
                     "isbn": isbn,
                     "title": info.get("title", ""),
                     "author": authors,
+                    "published_year": _extract_year(info.get("publishedDate")),
                     "source_url": f"https://books.google.com/books?id={gb_id}",
                 }
             log.warning("Google Books returned no items for %s", isbn)
@@ -79,6 +89,7 @@ async def fetch_isbn_metadata(isbn: str) -> dict | None:
                         "isbn": isbn,
                         "title": title,
                         "author": creator,
+                        "published_year": _extract_year(dc.findtext(f"{{{_DC}}}date")),
                         "source_url": f"https://portal.dnb.de/opac/simpleSearch?query={isbn}",
                     }
             log.warning("DNB returned no record for %s", isbn)
