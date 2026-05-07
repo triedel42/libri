@@ -12,6 +12,11 @@ Libri is a simple library management system built with <3 for 42 Wolfsburg.
 - Frontend: TypeScript + React + Tailwind
 
 ### Running
-To run for development use `docker compose up --build --watch`.
+To run for development use `make dev`
 
-`Dockerfile` builds a single production container.
+`infra/Dockerfile` builds a single production container.
+
+## Deployment
+Two options:
+- `docker compose up` will run the container
+- `make ci` will also check for and pull updates `infra/pull-deploy.sh`
