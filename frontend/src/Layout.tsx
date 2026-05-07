@@ -32,7 +32,7 @@ export default function Layout() {
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-3 items-center">
           <Link to="/" className="inline-flex items-center gap-2 border-b-2 border-transparent hover:border-current transition-colors justify-self-start">
             {bookSvg}
-            <span className="text-2xl font-bold tracking-tight">Libri</span>
+            <span className="text-2xl font-bold tracking-tight">Books</span>
           </Link>
           {user && (
             <Link to="/scan" className="justify-self-center p-2 rounded-lg border border-current transition-colors">
