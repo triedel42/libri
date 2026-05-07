@@ -3,4 +3,5 @@ AGENTS.md
 __pycache__/
 *.pyc
 *.db
+*.txt
 .env
