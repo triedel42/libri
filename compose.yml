@@ -1,31 +1,17 @@
+name: libri
+
 services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: infra/Dockerfile
     ports:
       - "8000:8000"
-      - "5173:5173"
     env_file:
       - path: .env
         required: false
     volumes:
       - data:/app/data
-    develop:
-      watch:
-        - action: sync
-          path: ./backend
-          target: /app/backend
-        - action: sync
-          path: ./frontend/src
-          target: /app/frontend/src
-        - action: sync
-          path: ./frontend/vite.config.ts
-          target: /app/frontend/vite.config.ts
-        - action: rebuild
-          path: pyproject.toml
-        - action: rebuild
-          path: frontend/package.json
 
 volumes:
   data:
