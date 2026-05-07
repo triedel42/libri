@@ -13,6 +13,7 @@ _OL_BOOKS = "https://openlibrary.org/api/books"
 _OL_COVERS = "https://covers.openlibrary.org/b/isbn"
 _GB_VOLUMES = "https://www.googleapis.com/books/v1/volumes"
 _DNB_SRU = "https://services.dnb.de/sru/dnb"
+_LOC_SEARCH = "https://www.loc.gov/books/"
 _DC = "http://purl.org/dc/elements/1.1/"
 
 _CLIENT = httpx.AsyncClient(timeout=30.0)
@@ -105,6 +106,29 @@ async def _fetch_from_providers(isbn: str) -> dict | None:
             log.warning("DNB returned no record for %s", isbn)
     except Exception as e:
         log.warning("DNB failed for %s: %s", isbn, e)
+
+    log.info("Trying Library of Congress for %s", isbn)
+    try:
+        r = await _CLIENT.get(_LOC_SEARCH, params={"q": isbn, "fo": "json", "c": "1"})
+        log.info("LoC status for %s: %s", isbn, r.status_code)
+        if r.status_code == 200:
+            results = r.json().get("results")
+            if results:
+                item = results[0]
+                title = item.get("title", "")
+                contributors = item.get("contributor", [])
+                author = ", ".join(contributors) if contributors else ""
+                if title:
+                    return {
+                        "isbn": isbn,
+                        "title": title,
+                        "author": author,
+                        "published_year": _extract_year(str(item.get("date", ""))),
+                        "source_url": item.get("url"),
+                    }
+            log.warning("LoC returned no results for %s", isbn)
+    except Exception as e:
+        log.warning("LoC failed for %s: %s", isbn, e)
 
     return None
 
