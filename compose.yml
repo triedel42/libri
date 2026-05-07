@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: infra/Dockerfile
     ports:
-      - "8000:8000"
+      - "8000:5173"
     env_file:
       - path: .env
         required: false

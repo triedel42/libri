@@ -18,4 +18,4 @@ RUN npm --prefix frontend ci
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
-CMD sh -c "uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload & npm --prefix frontend run dev -- --host & wait"
+CMD sh -c "uv run uvicorn backend.main:app --host 0.0.0.0 --port 5173 --reload & npm --prefix frontend run dev -- --host & wait"
