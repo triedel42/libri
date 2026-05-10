@@ -1,3 +1,4 @@
+from sqlalchemy import case
 from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, RedirectResponse
@@ -124,7 +125,10 @@ def list_books(
     return (
         db.query(Book)
         .filter(~Book.removed)
-        .order_by(nulls_last(desc(Book.published_year)))
+        .order_by(
+            case((Book.source_url.isnot(None), 1), else_=0).desc(),
+            nulls_last(desc(Book.published_year)),
+        )
         .offset(offset)
         .limit(limit)
         .all()
